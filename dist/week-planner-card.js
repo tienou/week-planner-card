@@ -163,27 +163,29 @@ function e(e){return e&&e.__esModule?e.default:e}let t=globalThis,n=t.ShadowRoot
 
     .container .day .date {
         display: flex;
-        align-items: baseline;
-        gap: 4px;
+        align-items: center;
+        gap: 2px;
     }
 
     .container .day .date .add-event {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: 24px;
-        height: 24px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         cursor: pointer;
-        opacity: 0.5;
-        transition: opacity 0.2s, background-color 0.2s;
-        color: var(--primary-text-color);
-        --mdc-icon-size: 16px;
+        opacity: 0.6;
+        transition: opacity 0.2s, background-color 0.2s, color 0.2s;
+        color: var(--primary-color, #03a9f4);
+        background-color: rgba(var(--rgb-primary-color, 3, 169, 244), 0.1);
+        --mdc-icon-size: 22px;
     }
 
     .container .day .date .add-event:hover {
         opacity: 1;
-        background-color: var(--divider-color, rgba(0,0,0,0.1));
+        background-color: var(--primary-color, #03a9f4);
+        color: var(--text-primary-color, #fff);
     }
 
     .container .day .weather {
