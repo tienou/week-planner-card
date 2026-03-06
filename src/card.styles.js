@@ -45,6 +45,38 @@ export default css`
         --weather-temperature-font-size: 0.8em;
     }
   
+    .card-header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .card-header-row .card-title {
+        margin: 0;
+    }
+
+    .current-weather {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: var(--weather-temperature-font-size);
+    }
+
+    .current-weather .icon {
+        display: inline-block;
+        vertical-align: middle;
+        background-size: cover;
+        width: var(--weather-icon-size);
+        height: var(--weather-icon-size);
+    }
+
+    .current-weather .icon img {
+        max-width: var(--weather-icon-size);
+        max-height: var(--weather-icon-size);
+    }
+
     .errors {
         white-space: pre-line;
     }

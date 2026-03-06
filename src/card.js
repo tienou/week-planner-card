@@ -191,6 +191,12 @@ export class WeekPlannerCard extends LitElement {
         this._showTitle = config.showTitle ?? true;
         this._showDescription = config.showDescription ?? false;
         this._showLocation = config.showLocation ?? false;
+        this._showTime = config.showTime ?? false;
+        this._showDayName = config.showDayName ?? false;
+        this._showDate = config.showDate ?? false;
+        this._showCalendarName = config.showCalendarName ?? false;
+        this._showWeather = config.showWeather ?? true;
+        this._showCurrentWeather = config.showCurrentWeather ?? false;
         this._hidePastEvents = config.hidePastEvents ?? false;
         this._hideAllDayEvents = config.hideAllDayEvents ?? false;
         this._hideDaysWithoutEvents = config.hideDaysWithoutEvents ?? false;
@@ -317,8 +323,11 @@ export class WeekPlannerCard extends LitElement {
                         html`<div class="errors"><ha-alert alert-type="error">${this._error}</ha-alert></div>` :
                         ''
                     }
-                    ${this._title ?
-                        html`<h1 class="card-title">${this._title}</h1>` :
+                    ${this._title || this._showCurrentWeather ?
+                        html`<div class="card-header-row">
+                            ${this._title ? html`<h1 class="card-title">${this._title}</h1>` : html`<div></div>`}
+                            ${this._renderCurrentWeather()}
+                        </div>` :
                         ''
                     }
                     <div class="container${this._actions ? ' hasActions' : ''}" @click="${this._handleContainerClick}">
@@ -448,14 +457,14 @@ export class WeekPlannerCard extends LitElement {
                                 unsafeHTML(day.date.toFormat(this._dayFormat)) :
                                 html`
                                     <span class="number">${day.date.day}</span>
-                                    ${this._showWeekDayText || (!this._numberOfDaysIsMonth && this._numberOfDays < 7) ?
+                                    ${this._showDayName && (this._showWeekDayText || (!this._numberOfDaysIsMonth && this._numberOfDays < 7)) ?
                                         html`<span class="text">${this._getWeekDayText(day.date)}</span>` :
                                         ''
                                     }
                                 `
                             }
                         </div>
-                        ${day.weather ?
+                        ${this._showWeather && day.weather ?
                             html`
                                 <div class="weather" @click="${this._handleWeatherClick}">
                                     ${this._weather?.showTemperature || this._weather?.showLowTemperature ?
@@ -571,9 +580,12 @@ export class WeekPlannerCard extends LitElement {
                             `
                         })}
                         <div class="inner">
-                            <div class="time">
-                                ${this._renderEventTime(event)}
-                            </div>
+                            ${this._showTime ?
+                                html`<div class="time">
+                                    ${this._renderEventTime(event)}
+                                </div>` :
+                                ''
+                            }
                             ${this._showTitle ?
                                     html`
                                         <div class="title">
@@ -646,6 +658,30 @@ export class WeekPlannerCard extends LitElement {
         `;
     }
 
+    _renderCurrentWeather() {
+        if (!this._showCurrentWeather || !this._weather) {
+            return html``;
+        }
+
+        const weatherState = this.hass?.states[this._weather.entity];
+        if (!weatherState) {
+            return html``;
+        }
+
+        const condition = weatherState.state;
+        const temperature = this._weather.roundTemperature
+            ? Math.round(weatherState.attributes.temperature)
+            : weatherState.attributes.temperature;
+        const formattedTemp = this.hass.formatEntityAttributeValue(weatherState, 'temperature', temperature);
+
+        return html`
+            <div class="current-weather" @click="${this._handleWeatherClick}">
+                ${this._getWeatherIcon(condition, this.hass.formatEntityState(weatherState))}
+                <span class="temperature">${formattedTemp}</span>
+            </div>
+        `;
+    }
+
     _renderEventDetailsDialog() {
         if (!this._currentEventDetails) {
             return html``;
@@ -658,18 +694,24 @@ export class WeekPlannerCard extends LitElement {
                 .heading="${this._renderEventDetailsDialogHeading()}"
             >
                 <div class="content">
-                    <div class="calendar">
-                        <ha-icon icon="mdi:calendar-account"></ha-icon>
-                        <div class="info">
-                            ${this._currentEventDetails.calendarNames.join(', ')}
-                        </div>
-                    </div>
-                    <div class="datetime">
-                        <ha-icon icon="mdi:calendar-clock"></ha-icon>
-                        <div class="info">
-                            ${this._renderEventDetailsDate()}
-                        </div>
-                    </div>
+                    ${this._showCalendarName ?
+                        html`<div class="calendar">
+                            <ha-icon icon="mdi:calendar-account"></ha-icon>
+                            <div class="info">
+                                ${this._currentEventDetails.calendarNames.join(', ')}
+                            </div>
+                        </div>` :
+                        ''
+                    }
+                    ${this._showDate ?
+                        html`<div class="datetime">
+                            <ha-icon icon="mdi:calendar-clock"></ha-icon>
+                            <div class="info">
+                                ${this._renderEventDetailsDate()}
+                            </div>
+                        </div>` :
+                        ''
+                    }
                     ${this._currentEventDetails.location ?
                         html`
                             <div class="location">
