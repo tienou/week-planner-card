@@ -1449,11 +1449,14 @@ export class WeekPlannerCard extends LitElement {
         const start = DateTime.fromISO(startInput);
         const end = endInput ? DateTime.fromISO(endInput) : start.plus({ hours: 1 });
 
+        const entityId = calendar || event.calendars[0];
+
         try {
+            // Try native update first
             if (event.uid) {
                 const wsData = {
                     type: 'calendar/event/update',
-                    entity_id: calendar || event.calendars[0],
+                    entity_id: entityId,
                     uid: event.uid,
                     event: {
                         summary: title,
@@ -1465,18 +1468,43 @@ export class WeekPlannerCard extends LitElement {
                     wsData.recurrence_id = event.recurrence_id;
                     wsData.recurrence_range = 'THISANDFUTURE';
                 }
-                console.log('Week Planner: Updating event', wsData);
                 await this.hass.callWS(wsData);
-                console.log('Week Planner: Event updated successfully');
-            } else {
-                console.error('Week Planner: No uid for event update');
             }
 
             this._showEditEventDialog = null;
             this._editFormData = null;
             this._updateEvents();
         } catch (e) {
-            console.error('Week Planner: Failed to update event:', e);
+            // Fallback: delete + recreate if update not supported
+            if (e.code === 'not_supported' && event.uid) {
+                try {
+                    const deleteData = {
+                        type: 'calendar/event/delete',
+                        entity_id: entityId,
+                        uid: event.uid,
+                    };
+                    if (event.recurrence_id) {
+                        deleteData.recurrence_id = event.recurrence_id;
+                        deleteData.recurrence_range = 'THISANDFUTURE';
+                    }
+                    await this.hass.callWS(deleteData);
+
+                    await this.hass.callService('calendar', 'create_event', {
+                        entity_id: entityId,
+                        summary: title,
+                        start_date_time: start.toFormat('yyyy-MM-dd HH:mm:ss'),
+                        end_date_time: end.toFormat('yyyy-MM-dd HH:mm:ss'),
+                    });
+
+                    this._showEditEventDialog = null;
+                    this._editFormData = null;
+                    this._updateEvents();
+                } catch (fallbackError) {
+                    console.error('Week Planner: Failed to update event (fallback):', fallbackError);
+                }
+            } else {
+                console.error('Week Planner: Failed to update event:', e);
+            }
         }
     }
 
