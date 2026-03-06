@@ -163,6 +163,9 @@ export default css`
     }
 
     .container .day .add-event {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -174,12 +177,15 @@ export default css`
         transition: opacity 0.2s;
         color: var(--primary-text-color);
         --mdc-icon-size: 18px;
-        margin-left: auto;
-        margin-top: 4px;
+        z-index: 3;
     }
 
     .container .day .add-event:hover {
         opacity: 0.8;
+    }
+
+    .container .day {
+        padding-bottom: 32px;
     }
 
     .container .day .weather {
