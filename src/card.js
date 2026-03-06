@@ -1385,16 +1385,17 @@ export class WeekPlannerCard extends LitElement {
         }
 
         try {
-            const serviceData = {
+            const wsData = {
+                type: 'calendar/event/delete',
                 entity_id: event.calendars[0],
                 uid: event.uid,
             };
             if (event.recurrence_id) {
-                serviceData.recurrence_id = event.recurrence_id;
-                serviceData.recurrence_range = 'THISANDFUTURE';
+                wsData.recurrence_id = event.recurrence_id;
+                wsData.recurrence_range = 'THISANDFUTURE';
             }
 
-            await this.hass.callService('calendar', 'delete_event', serviceData);
+            await this.hass.callWS(wsData);
             this._currentEventDetails = null;
             this._updateEvents();
         } catch (e) {
@@ -1427,26 +1428,23 @@ export class WeekPlannerCard extends LitElement {
         const end = endInput ? DateTime.fromISO(endInput) : start.plus({ hours: 1 });
 
         try {
-            // Delete old event
             if (event.uid) {
-                const deleteData = {
+                const wsData = {
+                    type: 'calendar/event/update',
                     entity_id: event.calendars[0],
                     uid: event.uid,
+                    event: {
+                        summary: title,
+                        dtstart: start.toFormat('yyyy-MM-dd HH:mm:ss'),
+                        dtend: end.toFormat('yyyy-MM-dd HH:mm:ss'),
+                    },
                 };
                 if (event.recurrence_id) {
-                    deleteData.recurrence_id = event.recurrence_id;
-                    deleteData.recurrence_range = 'THISANDFUTURE';
+                    wsData.recurrence_id = event.recurrence_id;
+                    wsData.recurrence_range = 'THISANDFUTURE';
                 }
-                await this.hass.callService('calendar', 'delete_event', deleteData);
+                await this.hass.callWS(wsData);
             }
-
-            // Create updated event
-            await this.hass.callService('calendar', 'create_event', {
-                entity_id: calendar,
-                summary: title,
-                start_date_time: start.toFormat('yyyy-MM-dd HH:mm:ss'),
-                end_date_time: end.toFormat('yyyy-MM-dd HH:mm:ss'),
-            });
 
             this._showEditEventDialog = null;
             this._updateEvents();
