@@ -149,7 +149,8 @@ export class WeekPlannerCard extends LitElement {
             _currentEventDetails: { type: Object },
             _hideCalendars: { type: Array },
             _showCreateEventDialog: { type: Object },
-            _showEditEventDialog: { type: Object }
+            _showEditEventDialog: { type: Object },
+            _editFormData: { type: Object }
         }
     }
 
@@ -816,13 +817,12 @@ export class WeekPlannerCard extends LitElement {
     }
 
     _renderEditEventDialog() {
-        if (!this._showEditEventDialog) {
+        if (!this._showEditEventDialog || !this._editFormData) {
             return html``;
         }
 
         const event = this._showEditEventDialog;
-        const startValue = event.originalStart.toFormat("yyyy-MM-dd'T'HH:mm");
-        const endValue = event.originalEnd ? event.originalEnd.toFormat("yyyy-MM-dd'T'HH:mm") : '';
+        const form = this._editFormData;
 
         return html`
             <ha-dialog
@@ -833,23 +833,30 @@ export class WeekPlannerCard extends LitElement {
                 <div class="create-event-form">
                     <div class="form-row">
                         <label for="edit-event-title">Titre *</label>
-                        <input type="text" id="edit-event-title" class="form-input" required .value="${event.summary}" />
+                        <input type="text" id="edit-event-title" class="form-input" required
+                            .value="${form.title}"
+                            @input="${(e) => { this._editFormData = { ...this._editFormData, title: e.target.value }; }}" />
                     </div>
                     <div class="form-row">
                         <label for="edit-event-calendar">Calendrier</label>
-                        <select id="edit-event-calendar" class="form-input">
+                        <select id="edit-event-calendar" class="form-input"
+                            @change="${(e) => { this._editFormData = { ...this._editFormData, calendar: e.target.value }; }}">
                             ${this._calendars.map((calendar) => html`
-                                <option value="${calendar.entity}" ?selected="${event.calendars.includes(calendar.entity)}">${calendar.name ?? calendar.entity}</option>
+                                <option value="${calendar.entity}" ?selected="${calendar.entity === form.calendar}">${calendar.name ?? calendar.entity}</option>
                             `)}
                         </select>
                     </div>
                     <div class="form-row">
                         <label for="edit-event-start">Début *</label>
-                        <input type="datetime-local" id="edit-event-start" class="form-input" .value="${startValue}" required />
+                        <input type="datetime-local" id="edit-event-start" class="form-input" required
+                            .value="${form.start}"
+                            @input="${(e) => { this._editFormData = { ...this._editFormData, start: e.target.value }; }}" />
                     </div>
                     <div class="form-row">
                         <label for="edit-event-end">Fin</label>
-                        <input type="datetime-local" id="edit-event-end" class="form-input" .value="${endValue}" />
+                        <input type="datetime-local" id="edit-event-end" class="form-input"
+                            .value="${form.end}"
+                            @input="${(e) => { this._editFormData = { ...this._editFormData, end: e.target.value }; }}" />
                     </div>
                     <div class="form-actions">
                         <button class="btn btn-cancel" @click="${this._closeEditEventDialog}">Annuler</button>
@@ -1406,21 +1413,36 @@ export class WeekPlannerCard extends LitElement {
     _handleEditEventClick() {
         const event = this._currentEventDetails;
         this._currentEventDetails = null;
+        this._editFormData = {
+            title: event.summary || '',
+            calendar: event.calendars[0] || '',
+            start: event.originalStart ? event.originalStart.toFormat("yyyy-MM-dd'T'HH:mm") : '',
+            end: event.originalEnd ? event.originalEnd.toFormat("yyyy-MM-dd'T'HH:mm") : '',
+        };
         this._showEditEventDialog = event;
     }
 
     _closeEditEventDialog() {
         this._showEditEventDialog = null;
+        this._editFormData = null;
     }
 
     async _handleUpdateEvent() {
         const event = this._showEditEventDialog;
-        const title = this.shadowRoot.querySelector('#edit-event-title')?.value?.trim();
-        const calendar = this.shadowRoot.querySelector('#edit-event-calendar')?.value;
-        const startInput = this.shadowRoot.querySelector('#edit-event-start')?.value;
-        const endInput = this.shadowRoot.querySelector('#edit-event-end')?.value;
+        const form = this._editFormData;
+
+        if (!event || !form) {
+            console.error('Week Planner: No event or form data for update');
+            return;
+        }
+
+        const title = form.title?.trim();
+        const calendar = form.calendar;
+        const startInput = form.start;
+        const endInput = form.end;
 
         if (!title || !startInput) {
+            console.error('Week Planner: Missing required fields', { title, startInput });
             return;
         }
 
@@ -1431,25 +1453,30 @@ export class WeekPlannerCard extends LitElement {
             if (event.uid) {
                 const wsData = {
                     type: 'calendar/event/update',
-                    entity_id: event.calendars[0],
+                    entity_id: calendar || event.calendars[0],
                     uid: event.uid,
                     event: {
                         summary: title,
-                        dtstart: start.toFormat('yyyy-MM-dd HH:mm:ss'),
-                        dtend: end.toFormat('yyyy-MM-dd HH:mm:ss'),
+                        dtstart: start.toFormat("yyyy-MM-dd'T'HH:mm:ss"),
+                        dtend: end.toFormat("yyyy-MM-dd'T'HH:mm:ss"),
                     },
                 };
                 if (event.recurrence_id) {
                     wsData.recurrence_id = event.recurrence_id;
                     wsData.recurrence_range = 'THISANDFUTURE';
                 }
+                console.log('Week Planner: Updating event', wsData);
                 await this.hass.callWS(wsData);
+                console.log('Week Planner: Event updated successfully');
+            } else {
+                console.error('Week Planner: No uid for event update');
             }
 
             this._showEditEventDialog = null;
+            this._editFormData = null;
             this._updateEvents();
         } catch (e) {
-            console.error('Failed to update event:', e);
+            console.error('Week Planner: Failed to update event:', e);
         }
     }
 
