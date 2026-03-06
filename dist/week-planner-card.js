@@ -162,9 +162,6 @@ function e(e){return e&&e.__esModule?e.default:e}let t=globalThis,n=t.ShadowRoot
     }
 
     .container .day .add-event {
-        position: absolute;
-        bottom: 2px;
-        right: 2px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -172,21 +169,16 @@ function e(e){return e&&e.__esModule?e.default:e}let t=globalThis,n=t.ShadowRoot
         height: 28px;
         border-radius: 50%;
         cursor: pointer;
-        opacity: 0.4;
-        transition: opacity 0.2s, background-color 0.2s;
+        opacity: 0.3;
+        transition: opacity 0.2s;
         color: var(--primary-text-color);
-        background-color: var(--card-background-color, #fff);
         --mdc-icon-size: 18px;
-        z-index: 10;
+        margin-left: auto;
+        margin-top: 4px;
     }
 
     .container .day .add-event:hover {
-        opacity: 1;
-        background-color: var(--divider-color, rgba(0,0,0,0.1));
-    }
-
-    .container .day {
-        padding-bottom: 32px;
+        opacity: 0.8;
     }
 
     .container .day .weather {
