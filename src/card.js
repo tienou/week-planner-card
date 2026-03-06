@@ -450,9 +450,6 @@ export class WeekPlannerCard extends LitElement {
                                     }
                                 `
                             }
-                            <div class="add-event" @click="${(e) => this._handleAddEventClick(e, day)}">
-                                <ha-icon icon="mdi:plus"></ha-icon>
-                            </div>
                         </div>
                         ${day.weather ?
                             html`
@@ -486,6 +483,9 @@ export class WeekPlannerCard extends LitElement {
                         }
                         <div class="events">
                             ${this._renderEvents(day)}
+                        </div>
+                        <div class="add-event" @click="${(e) => this._handleAddEventClick(e, day)}">
+                            <ha-icon icon="mdi:plus"></ha-icon>
                         </div>
                     </div>
                 `

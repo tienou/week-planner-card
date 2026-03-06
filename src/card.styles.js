@@ -162,31 +162,25 @@ export default css`
         font-size: var(--day-date-text-font-size);
     }
 
-    .container .day .date {
+    .container .day .add-event {
+        position: absolute;
+        right: 2px;
+        bottom: 2px;
         display: flex;
         align-items: center;
-        gap: 2px;
-    }
-
-    .container .day .date .add-event {
-        display: inline-flex;
-        align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 32px;
+        width: 22px;
+        height: 22px;
         border-radius: 50%;
         cursor: pointer;
-        opacity: 0.6;
-        transition: opacity 0.2s, background-color 0.2s, color 0.2s;
-        color: var(--primary-color, #03a9f4);
-        background-color: rgba(var(--rgb-primary-color, 3, 169, 244), 0.1);
-        --mdc-icon-size: 22px;
+        opacity: 0.3;
+        transition: opacity 0.2s;
+        color: var(--primary-text-color);
+        --mdc-icon-size: 14px;
     }
 
-    .container .day .date .add-event:hover {
-        opacity: 1;
-        background-color: var(--primary-color, #03a9f4);
-        color: var(--text-primary-color, #fff);
+    .container .day .add-event:hover {
+        opacity: 0.8;
     }
 
     .container .day .weather {

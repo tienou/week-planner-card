@@ -161,31 +161,25 @@ function e(e){return e&&e.__esModule?e.default:e}let t=globalThis,n=t.ShadowRoot
         font-size: var(--day-date-text-font-size);
     }
 
-    .container .day .date {
+    .container .day .add-event {
+        position: absolute;
+        right: 2px;
+        bottom: 2px;
         display: flex;
         align-items: center;
-        gap: 2px;
-    }
-
-    .container .day .date .add-event {
-        display: inline-flex;
-        align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 32px;
+        width: 22px;
+        height: 22px;
         border-radius: 50%;
         cursor: pointer;
-        opacity: 0.6;
-        transition: opacity 0.2s, background-color 0.2s, color 0.2s;
-        color: var(--primary-color, #03a9f4);
-        background-color: rgba(var(--rgb-primary-color, 3, 169, 244), 0.1);
-        --mdc-icon-size: 22px;
+        opacity: 0.3;
+        transition: opacity 0.2s;
+        color: var(--primary-text-color);
+        --mdc-icon-size: 14px;
     }
 
-    .container .day .date .add-event:hover {
-        opacity: 1;
-        background-color: var(--primary-color, #03a9f4);
-        color: var(--text-primary-color, #fff);
+    .container .day .add-event:hover {
+        opacity: 0.8;
     }
 
     .container .day .weather {
@@ -488,9 +482,6 @@ function e(e){return e&&e.__esModule?e.default:e}let t=globalThis,n=t.ShadowRoot
                                     <span class="number">${e.date.day}</span>
                                     ${this._showWeekDayText||!this._numberOfDaysIsMonth&&this._numberOfDays<7?j`<span class="text">${this._getWeekDayText(e.date)}</span>`:""}
                                 `}
-                            <div class="add-event" @click="${t=>this._handleAddEventClick(t,e)}">
-                                <ha-icon icon="mdi:plus"></ha-icon>
-                            </div>
                         </div>
                         ${e.weather?j`
                                 <div class="weather" @click="${this._handleWeatherClick}">
@@ -509,6 +500,9 @@ function e(e){return e&&e.__esModule?e.default:e}let t=globalThis,n=t.ShadowRoot
                             `:""}
                         <div class="events">
                             ${this._renderEvents(e)}
+                        </div>
+                        <div class="add-event" @click="${t=>this._handleAddEventClick(t,e)}">
+                            <ha-icon icon="mdi:plus"></ha-icon>
                         </div>
                     </div>
                 `)}
