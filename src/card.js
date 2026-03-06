@@ -169,6 +169,7 @@ export class WeekPlannerCard extends LitElement {
         this._numberOfDaysIsMonth = this._isNumberOfDaysMonth(config.days ?? 7);
         this._title = config.title ?? null;
         this._calendars = config.calendars;
+        this._defaultCalendar = config.defaultCalendar ?? null;
         this._weather = this._getWeatherConfig(config.weather);
         this._numberOfDays = this._getNumberOfDays(config.days ?? 7);
         this._hideWeekend = config.hideWeekend ?? false;
@@ -782,7 +783,7 @@ export class WeekPlannerCard extends LitElement {
                         <label for="event-calendar">Calendrier</label>
                         <select id="event-calendar" class="form-input">
                             ${this._calendars.map((calendar) => html`
-                                <option value="${calendar.entity}">${calendar.name ?? calendar.entity}</option>
+                                <option value="${calendar.entity}" ?selected="${calendar.entity === this._defaultCalendar}">${calendar.name ?? calendar.entity}</option>
                             `)}
                         </select>
                     </div>
