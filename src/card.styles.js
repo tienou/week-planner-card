@@ -311,6 +311,41 @@ export default css`
         padding-top: 16px;
     }
 
+    ha-dialog .event-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--divider-color, #e0e0e0);
+    }
+
+    ha-dialog .event-actions .btn {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        --mdc-icon-size: 16px;
+    }
+
+    ha-dialog .event-actions .btn-edit {
+        background-color: var(--primary-color, #03a9f4);
+        color: var(--text-primary-color, #fff);
+    }
+
+    ha-dialog .event-actions .btn-delete {
+        background-color: var(--error-color, #db4437);
+        color: #fff;
+    }
+
+    ha-dialog .event-actions .btn:hover {
+        opacity: 0.9;
+    }
+
     .create-event-form {
         padding: 8px 0;
     }

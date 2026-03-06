@@ -148,7 +148,8 @@ export class WeekPlannerCard extends LitElement {
             _error: { type: String },
             _currentEventDetails: { type: Object },
             _hideCalendars: { type: Array },
-            _showCreateEventDialog: { type: Object }
+            _showCreateEventDialog: { type: Object },
+            _showEditEventDialog: { type: Object }
         }
     }
 
@@ -325,6 +326,7 @@ export class WeekPlannerCard extends LitElement {
                     </div>
                     ${this._renderEventDetailsDialog()}
                     ${this._renderCreateEventDialog()}
+                    ${this._renderEditEventDialog()}
                     ${this._loader}
                 </div>
             </ha-card>
@@ -685,6 +687,19 @@ export class WeekPlannerCard extends LitElement {
                         ` :
                         ''
                     }
+                    ${this._currentEventDetails.uid ?
+                        html`
+                            <div class="event-actions">
+                                <button class="btn btn-edit" @click="${this._handleEditEventClick}">
+                                    <ha-icon icon="mdi:pencil"></ha-icon> Modifier
+                                </button>
+                                <button class="btn btn-delete" @click="${this._handleDeleteEvent}">
+                                    <ha-icon icon="mdi:delete"></ha-icon> Supprimer
+                                </button>
+                            </div>
+                        ` :
+                        ''
+                    }
                 </div>
             </ha-dialog>
         `;
@@ -791,6 +806,64 @@ export class WeekPlannerCard extends LitElement {
         return html`
             <div class="header_title">
                 <span>Nouvel événement</span>
+                <ha-icon-button
+                    .label="${this.hass?.localize('ui.dialogs.generic.close') ?? 'Close'}"
+                    dialogAction="close"
+                    class="header_button"
+                ><ha-icon icon="mdi:close"></ha-icon></ha-icon-button>
+            </div>
+        `;
+    }
+
+    _renderEditEventDialog() {
+        if (!this._showEditEventDialog) {
+            return html``;
+        }
+
+        const event = this._showEditEventDialog;
+        const startValue = event.originalStart.toFormat("yyyy-MM-dd'T'HH:mm");
+        const endValue = event.originalEnd ? event.originalEnd.toFormat("yyyy-MM-dd'T'HH:mm") : '';
+
+        return html`
+            <ha-dialog
+                open
+                @closed="${this._closeEditEventDialog}"
+                .heading="${this._renderEditEventDialogHeading()}"
+            >
+                <div class="create-event-form">
+                    <div class="form-row">
+                        <label for="edit-event-title">Titre *</label>
+                        <input type="text" id="edit-event-title" class="form-input" required .value="${event.summary}" />
+                    </div>
+                    <div class="form-row">
+                        <label for="edit-event-calendar">Calendrier</label>
+                        <select id="edit-event-calendar" class="form-input">
+                            ${this._calendars.map((calendar) => html`
+                                <option value="${calendar.entity}" ?selected="${event.calendars.includes(calendar.entity)}">${calendar.name ?? calendar.entity}</option>
+                            `)}
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label for="edit-event-start">Début *</label>
+                        <input type="datetime-local" id="edit-event-start" class="form-input" .value="${startValue}" required />
+                    </div>
+                    <div class="form-row">
+                        <label for="edit-event-end">Fin</label>
+                        <input type="datetime-local" id="edit-event-end" class="form-input" .value="${endValue}" />
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-cancel" @click="${this._closeEditEventDialog}">Annuler</button>
+                        <button class="btn btn-submit" @click="${this._handleUpdateEvent}">Enregistrer</button>
+                    </div>
+                </div>
+            </ha-dialog>
+        `;
+    }
+
+    _renderEditEventDialogHeading() {
+        return html`
+            <div class="header_title">
+                <span>Modifier l'événement</span>
                 <ha-icon-button
                     .label="${this.hass?.localize('ui.dialogs.generic.close') ?? 'Close'}"
                     dialogAction="close"
@@ -1019,7 +1092,9 @@ export class WeekPlannerCard extends LitElement {
                 calendars: [calendar.entity],
                 calendarSorting: calendar.sorting,
                 calendarNames: [calendar.name],
-                class: this._getEventClass(startDate, endDate, fullDay, multiDay)
+                class: this._getEventClass(startDate, endDate, fullDay, multiDay),
+                uid: event.uid ?? null,
+                recurrence_id: event.recurrence_id ?? null,
             }
             this._events[dateKey].push(eventKey);
         }
@@ -1300,6 +1375,83 @@ export class WeekPlannerCard extends LitElement {
             this._updateEvents();
         } catch (e) {
             console.error('Failed to create event:', e);
+        }
+    }
+
+    async _handleDeleteEvent() {
+        const event = this._currentEventDetails;
+        if (!event || !event.uid) {
+            return;
+        }
+
+        try {
+            const serviceData = {
+                entity_id: event.calendars[0],
+                uid: event.uid,
+            };
+            if (event.recurrence_id) {
+                serviceData.recurrence_id = event.recurrence_id;
+                serviceData.recurrence_range = 'THISANDFUTURE';
+            }
+
+            await this.hass.callService('calendar', 'delete_event', serviceData);
+            this._currentEventDetails = null;
+            this._updateEvents();
+        } catch (e) {
+            console.error('Failed to delete event:', e);
+        }
+    }
+
+    _handleEditEventClick() {
+        const event = this._currentEventDetails;
+        this._currentEventDetails = null;
+        this._showEditEventDialog = event;
+    }
+
+    _closeEditEventDialog() {
+        this._showEditEventDialog = null;
+    }
+
+    async _handleUpdateEvent() {
+        const event = this._showEditEventDialog;
+        const title = this.shadowRoot.querySelector('#edit-event-title')?.value?.trim();
+        const calendar = this.shadowRoot.querySelector('#edit-event-calendar')?.value;
+        const startInput = this.shadowRoot.querySelector('#edit-event-start')?.value;
+        const endInput = this.shadowRoot.querySelector('#edit-event-end')?.value;
+
+        if (!title || !startInput) {
+            return;
+        }
+
+        const start = DateTime.fromISO(startInput);
+        const end = endInput ? DateTime.fromISO(endInput) : start.plus({ hours: 1 });
+
+        try {
+            // Delete old event
+            if (event.uid) {
+                const deleteData = {
+                    entity_id: event.calendars[0],
+                    uid: event.uid,
+                };
+                if (event.recurrence_id) {
+                    deleteData.recurrence_id = event.recurrence_id;
+                    deleteData.recurrence_range = 'THISANDFUTURE';
+                }
+                await this.hass.callService('calendar', 'delete_event', deleteData);
+            }
+
+            // Create updated event
+            await this.hass.callService('calendar', 'create_event', {
+                entity_id: calendar,
+                summary: title,
+                start_date_time: start.toFormat('yyyy-MM-dd HH:mm:ss'),
+                end_date_time: end.toFormat('yyyy-MM-dd HH:mm:ss'),
+            });
+
+            this._showEditEventDialog = null;
+            this._updateEvents();
+        } catch (e) {
+            console.error('Failed to update event:', e);
         }
     }
 
