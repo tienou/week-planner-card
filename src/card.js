@@ -147,7 +147,8 @@ export class WeekPlannerCard extends LitElement {
             _config: { type: Object },
             _error: { type: String },
             _currentEventDetails: { type: Object },
-            _hideCalendars: { type: Array }
+            _hideCalendars: { type: Array },
+            _showCreateEventDialog: { type: Object }
         }
     }
 
@@ -323,6 +324,7 @@ export class WeekPlannerCard extends LitElement {
                         ${this._renderDays()}
                     </div>
                     ${this._renderEventDetailsDialog()}
+                    ${this._renderCreateEventDialog()}
                     ${this._loader}
                 </div>
             </ha-card>
@@ -448,6 +450,9 @@ export class WeekPlannerCard extends LitElement {
                                     }
                                 `
                             }
+                            <div class="add-event" @click="${(e) => this._handleAddEventClick(e, day)}">
+                                <ha-icon icon="mdi:plus"></ha-icon>
+                            </div>
                         </div>
                         ${day.weather ?
                             html`
@@ -726,6 +731,72 @@ export class WeekPlannerCard extends LitElement {
 
         return html`
             ${start.toFormat(this._dateFormat + ' ' + this._timeFormat)} - ${end.toFormat(this._dateFormat + ' ' + this._timeFormat)}
+        `;
+    }
+
+    _renderCreateEventDialog() {
+        if (!this._showCreateEventDialog) {
+            return html``;
+        }
+
+        const dayDate = this._showCreateEventDialog.date;
+        const now = DateTime.now();
+        const defaultStart = dayDate.set({
+            hour: now.hour + 1,
+            minute: 0,
+            second: 0,
+            millisecond: 0,
+        });
+        const defaultEnd = defaultStart.plus({ hours: 1 });
+        const startValue = defaultStart.toFormat("yyyy-MM-dd'T'HH:mm");
+        const endValue = defaultEnd.toFormat("yyyy-MM-dd'T'HH:mm");
+
+        return html`
+            <ha-dialog
+                open
+                @closed="${this._closeCreateEventDialog}"
+                .heading="${this._renderCreateEventDialogHeading()}"
+            >
+                <div class="create-event-form">
+                    <div class="form-row">
+                        <label for="event-title">Titre *</label>
+                        <input type="text" id="event-title" class="form-input" required placeholder="Titre de l'événement" />
+                    </div>
+                    <div class="form-row">
+                        <label for="event-calendar">Calendrier</label>
+                        <select id="event-calendar" class="form-input">
+                            ${this._calendars.map((calendar) => html`
+                                <option value="${calendar.entity}">${calendar.name ?? calendar.entity}</option>
+                            `)}
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label for="event-start">Début *</label>
+                        <input type="datetime-local" id="event-start" class="form-input" .value="${startValue}" required />
+                    </div>
+                    <div class="form-row">
+                        <label for="event-end">Fin</label>
+                        <input type="datetime-local" id="event-end" class="form-input" .value="${endValue}" />
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-cancel" @click="${this._closeCreateEventDialog}">Annuler</button>
+                        <button class="btn btn-submit" @click="${this._handleCreateEvent}">Créer</button>
+                    </div>
+                </div>
+            </ha-dialog>
+        `;
+    }
+
+    _renderCreateEventDialogHeading() {
+        return html`
+            <div class="header_title">
+                <span>Nouvel événement</span>
+                <ha-icon-button
+                    .label="${this.hass?.localize('ui.dialogs.generic.close') ?? 'Close'}"
+                    dialogAction="close"
+                    class="header_button"
+                ><ha-icon icon="mdi:close"></ha-icon></ha-icon-button>
+            </div>
         `;
     }
 
@@ -1189,6 +1260,47 @@ export class WeekPlannerCard extends LitElement {
 
     _closeDialog() {
         this._currentEventDetails = null;
+    }
+
+    _handleAddEventClick(e, day) {
+        e.stopImmediatePropagation();
+        this._showCreateEventDialog = { date: day.date };
+    }
+
+    _closeCreateEventDialog() {
+        this._showCreateEventDialog = null;
+    }
+
+    async _handleCreateEvent() {
+        const title = this.shadowRoot.querySelector('#event-title')?.value?.trim();
+        const calendar = this.shadowRoot.querySelector('#event-calendar')?.value;
+        const startInput = this.shadowRoot.querySelector('#event-start')?.value;
+        const endInput = this.shadowRoot.querySelector('#event-end')?.value;
+
+        if (!title) {
+            return;
+        }
+
+        if (!startInput) {
+            return;
+        }
+
+        const start = DateTime.fromISO(startInput);
+        const end = endInput ? DateTime.fromISO(endInput) : start.plus({ hours: 1 });
+
+        try {
+            await this.hass.callService('calendar', 'create_event', {
+                entity_id: calendar,
+                summary: title,
+                start_date_time: start.toFormat('yyyy-MM-dd HH:mm:ss'),
+                end_date_time: end.toFormat('yyyy-MM-dd HH:mm:ss'),
+            });
+
+            this._showCreateEventDialog = null;
+            this._updateEvents();
+        } catch (e) {
+            console.error('Failed to create event:', e);
+        }
     }
 
     _handleLegendClick(calendar) {

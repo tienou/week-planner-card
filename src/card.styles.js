@@ -162,6 +162,27 @@ export default css`
         font-size: var(--day-date-text-font-size);
     }
 
+    .container .day .date .add-event {
+        position: absolute;
+        right: 0;
+        top: 0;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0.4;
+        transition: opacity 0.2s;
+        color: var(--primary-text-color);
+        --mdc-icon-size: 18px;
+        z-index: 3;
+    }
+
+    .container .day .date .add-event:hover {
+        opacity: 1;
+    }
+
     .container .day .weather {
         position: absolute;
         top: 0;
@@ -286,6 +307,66 @@ export default css`
         border-top: 1px solid var(--primary-text-color);
         margin-top: 16px;
         padding-top: 16px;
+    }
+
+    .create-event-form {
+        padding: 8px 0;
+    }
+
+    .create-event-form .form-row {
+        margin-bottom: 12px;
+    }
+
+    .create-event-form .form-row label {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 0.9em;
+        color: var(--secondary-text-color, #aaaaaa);
+    }
+
+    .create-event-form .form-input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid var(--divider-color, #e0e0e0);
+        border-radius: 4px;
+        background-color: var(--card-background-color, #fff);
+        color: var(--primary-text-color);
+        font-size: 1em;
+        box-sizing: border-box;
+    }
+
+    .create-event-form .form-input:focus {
+        outline: none;
+        border-color: var(--primary-color, #03a9f4);
+    }
+
+    .create-event-form .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 16px;
+    }
+
+    .create-event-form .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+    }
+
+    .create-event-form .btn-cancel {
+        background-color: transparent;
+        color: var(--primary-text-color);
+    }
+
+    .create-event-form .btn-submit {
+        background-color: var(--primary-color, #03a9f4);
+        color: var(--text-primary-color, #fff);
+    }
+
+    .create-event-form .btn-submit:hover {
+        opacity: 0.9;
     }
 
     @keyframes loader {
