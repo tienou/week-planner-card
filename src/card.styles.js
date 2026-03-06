@@ -163,20 +163,19 @@ export default css`
     }
 
     .container .day .add-event {
-        position: absolute;
-        right: 2px;
-        bottom: 2px;
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 22px;
-        height: 22px;
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
         cursor: pointer;
         opacity: 0.3;
         transition: opacity 0.2s;
         color: var(--primary-text-color);
-        --mdc-icon-size: 14px;
+        --mdc-icon-size: 18px;
+        margin-left: auto;
+        margin-top: 4px;
     }
 
     .container .day .add-event:hover {
