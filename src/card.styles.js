@@ -392,6 +392,20 @@ export default css`
         font-size: 0.9em;
     }
 
+    .create-event-form .btn-delete {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background-color: var(--error-color, #db4437);
+        color: #fff;
+        margin-right: auto;
+        --mdc-icon-size: 16px;
+    }
+
+    .create-event-form .btn-delete:hover {
+        opacity: 0.9;
+    }
+
     .create-event-form .btn-cancel {
         background-color: transparent;
         color: var(--primary-text-color);

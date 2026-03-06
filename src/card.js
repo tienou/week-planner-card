@@ -859,6 +859,9 @@ export class WeekPlannerCard extends LitElement {
                             @input="${(e) => { this._editFormData = { ...this._editFormData, end: e.target.value }; }}" />
                     </div>
                     <div class="form-actions">
+                        <button class="btn btn-delete" @click="${this._handleDeleteEventFromEdit}">
+                            <ha-icon icon="mdi:delete"></ha-icon> Supprimer
+                        </button>
                         <button class="btn btn-cancel" @click="${this._closeEditEventDialog}">Annuler</button>
                         <button class="btn btn-submit" @click="${this._handleUpdateEvent}">Enregistrer</button>
                     </div>
@@ -1337,7 +1340,17 @@ export class WeekPlannerCard extends LitElement {
         if (this._actions) {
             return;
         }
-        this._currentEventDetails = event;
+        if (event.uid) {
+            this._editFormData = {
+                title: event.summary || '',
+                calendar: event.calendars[0] || '',
+                start: event.originalStart ? event.originalStart.toFormat("yyyy-MM-dd'T'HH:mm") : '',
+                end: event.originalEnd ? event.originalEnd.toFormat("yyyy-MM-dd'T'HH:mm") : '',
+            };
+            this._showEditEventDialog = event;
+        } else {
+            this._currentEventDetails = event;
+        }
     }
 
     _closeDialog() {
@@ -1425,6 +1438,32 @@ export class WeekPlannerCard extends LitElement {
     _closeEditEventDialog() {
         this._showEditEventDialog = null;
         this._editFormData = null;
+    }
+
+    async _handleDeleteEventFromEdit() {
+        const event = this._showEditEventDialog;
+        if (!event || !event.uid) {
+            return;
+        }
+
+        try {
+            const wsData = {
+                type: 'calendar/event/delete',
+                entity_id: event.calendars[0],
+                uid: event.uid,
+            };
+            if (event.recurrence_id) {
+                wsData.recurrence_id = event.recurrence_id;
+                wsData.recurrence_range = 'THISANDFUTURE';
+            }
+
+            await this.hass.callWS(wsData);
+            this._showEditEventDialog = null;
+            this._editFormData = null;
+            this._updateEvents();
+        } catch (e) {
+            console.error('Week Planner: Failed to delete event:', e);
+        }
     }
 
     async _handleUpdateEvent() {
