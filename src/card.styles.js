@@ -173,15 +173,17 @@ export default css`
         height: 28px;
         border-radius: 50%;
         cursor: pointer;
-        opacity: 0.3;
-        transition: opacity 0.2s;
+        opacity: 0.4;
+        transition: opacity 0.2s, background-color 0.2s;
         color: var(--primary-text-color);
+        background-color: var(--card-background-color, #fff);
         --mdc-icon-size: 18px;
-        z-index: 3;
+        z-index: 10;
     }
 
     .container .day .add-event:hover {
-        opacity: 0.8;
+        opacity: 1;
+        background-color: var(--divider-color, rgba(0,0,0,0.1));
     }
 
     .container .day {
