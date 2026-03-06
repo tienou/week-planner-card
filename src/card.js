@@ -388,7 +388,7 @@ export class WeekPlannerCard extends LitElement {
                     <li @click="${this._handleNavigationOriginalClick}"><ha-icon icon="mdi:circle-medium"></ha-icon></li>
                     <li @click="${this._handleNavigationNextClick}"><ha-icon icon="mdi:arrow-right"></ha-icon></li>
                 </ul>
-                <div class="month">${this._startDate.toFormat('MMMM')}</div>
+                <div class="month">${this._startDate.toFormat('MMMM yyyy')}</div>
             </div>
         `;
     }

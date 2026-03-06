@@ -516,7 +516,7 @@ function e(e){return e&&e.__esModule?e.default:e}let t=globalThis,n=t.ShadowRoot
                     <li @click="${this._handleNavigationOriginalClick}"><ha-icon icon="mdi:circle-medium"></ha-icon></li>
                     <li @click="${this._handleNavigationNextClick}"><ha-icon icon="mdi:arrow-right"></ha-icon></li>
                 </ul>
-                <div class="month">${this._startDate.toFormat("MMMM")}</div>
+                <div class="month">${this._startDate.toFormat("MMMM yyyy")}</div>
             </div>
         `:W``}_renderWeekDays(){if(this._showWeekDayText||!this._days||!this._numberOfDaysIsMonth&&this._numberOfDays<7)return W``;let e=this._days.slice(0,7),t=[this._language.sunday,this._language.monday,this._language.tuesday,this._language.wednesday,this._language.thursday,this._language.friday,this._language.saturday,this._language.sunday];return W`
             ${e.map(e=>W`
