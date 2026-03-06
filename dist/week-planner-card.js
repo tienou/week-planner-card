@@ -143,6 +143,8 @@ function e(e){return e&&e.__esModule?e.default:e}let t=globalThis,n=t.ShadowRoot
 
     .container .day {
         position: relative;
+        display: flex;
+        flex-direction: column;
         width: calc((100% - (var(--days-columns) - 1) * var(--days-spacing)) / var(--days-columns));
         margin: 0 0 var(--days-spacing) 0;
     }
@@ -174,7 +176,8 @@ function e(e){return e&&e.__esModule?e.default:e}let t=globalThis,n=t.ShadowRoot
         color: var(--primary-text-color);
         --mdc-icon-size: 18px;
         margin-left: auto;
-        margin-top: 4px;
+        margin-top: auto;
+        padding-top: 4px;
     }
 
     .container .day .add-event:hover {
