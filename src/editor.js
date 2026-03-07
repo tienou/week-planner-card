@@ -190,6 +190,15 @@ export class WeekPlannerCardEditor extends LitElement {
                 ${this.addExpansionPanel(
                     'Appearance',
                     html`
+                        ${this.addSelectField('theme', 'Theme', [
+                            {
+                                value: 'default',
+                                label: 'Default',
+                            }, {
+                                value: 'skylight',
+                                label: 'Skylight',
+                            }
+                        ], true)}
                         ${this.addBooleanField('noCardBackground', 'No card background')}
                         ${this.addTextField('eventBackground', 'Override events background color')}
                         ${this.addBooleanField('compact', 'Compact mode')}

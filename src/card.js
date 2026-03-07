@@ -182,6 +182,7 @@ export class WeekPlannerCard extends LitElement {
         this._noCardBackground = config.noCardBackground ?? false;
         this._eventBackground = config.eventBackground ?? 'var(--card-background-color, inherit)';
         this._compact = config.compact ?? false;
+        this._theme = config.theme ?? 'default';
         this._dayFormat = config.dayFormat ?? null;
         this._dateFormat = config.dateFormat ?? 'cccc d LLLL yyyy';
         this._timeFormat = config.timeFormat ?? 'HH:mm';
@@ -209,6 +210,8 @@ export class WeekPlannerCard extends LitElement {
         this._legendToggle = config.legendToggle ?? false;
         this._actions = config.actions ?? false;
         this._columns = config.columns ?? {};
+        this._dayHeaderFontSize = config.dayHeaderFontSize ?? null;
+        this._dayHeaderColor = config.dayHeaderColor ?? null;
         this._maxEvents = config.maxEvents ?? false;
         this._maxDayEvents = config.maxDayEvents ?? false;
         this._hideCalendars = (config.calendars || []).reduce((acc, calendar) => {
@@ -296,6 +299,9 @@ export class WeekPlannerCard extends LitElement {
         if (this._compact) {
             cardClasses.push('compact');
         }
+        if (this._theme && this._theme !== 'default') {
+            cardClasses.push(this._theme);
+        }
 
         const cardStyles = [
             '--event-background-color: ' + this._eventBackground + ';'
@@ -315,6 +321,12 @@ export class WeekPlannerCard extends LitElement {
         if (this._columns.extraSmall) {
             cardStyles.push('--days-columns-xs: ' + this._columns.extraSmall + ';');
         }
+        if (this._dayHeaderFontSize) {
+            cardStyles.push('--day-header-font-size: ' + this._dayHeaderFontSize + ';');
+        }
+        if (this._dayHeaderColor) {
+            cardStyles.push('--day-header-color: ' + this._dayHeaderColor + ';');
+        }
 
         return html`
             <ha-card class="${cardClasses.join(' ')}" style="${cardStyles.join(' ')}">
@@ -323,9 +335,9 @@ export class WeekPlannerCard extends LitElement {
                         html`<div class="errors"><ha-alert alert-type="error">${this._error}</ha-alert></div>` :
                         ''
                     }
-                    ${this._title || this._showCurrentWeather ?
+                    ${(this._title && this._showTitle) || this._showCurrentWeather ?
                         html`<div class="card-header-row">
-                            ${this._title ? html`<h1 class="card-title">${this._title}</h1>` : html`<div></div>`}
+                            ${this._title && this._showTitle ? html`<h1 class="card-title">${this._title}</h1>` : html`<div></div>`}
                             ${this._renderCurrentWeather()}
                         </div>` :
                         ''
@@ -453,15 +465,23 @@ export class WeekPlannerCard extends LitElement {
                 return html`
                     <div class="day ${day.class}" data-date="${day.date.day}" data-weekday="${day.date.weekday}" data-month="${day.date.month}" data-year="${day.date.year}" data-week="${day.date.weekNumber}">
                         <div class="date">
-                            ${this._dayFormat ?
-                                unsafeHTML(day.date.toFormat(this._dayFormat)) :
+                            ${this._theme === 'skylight' ?
                                 html`
-                                    <span class="number">${day.date.day}</span>
-                                    ${this._showDayName && (this._showWeekDayText || (!this._numberOfDaysIsMonth && this._numberOfDays < 7)) ?
-                                        html`<span class="text">${this._getWeekDayText(day.date)}</span>` :
-                                        ''
-                                    }
-                                `
+                                    <span class="skylight-day-header">
+                                        <span class="day-label">${day.date.toFormat('ccc')} ${day.date.day}</span>
+                                        <span class="add-event-text" @click="${(e) => this._handleAddEventClick(e, day)}">+ Add Event</span>
+                                    </span>
+                                ` :
+                                (this._dayFormat ?
+                                    unsafeHTML(day.date.toFormat(this._dayFormat)) :
+                                    html`
+                                        <span class="number">${day.date.day}</span>
+                                        ${this._showDayName || (this._showWeekDayText && !this._numberOfDaysIsMonth && this._numberOfDays < 7) ?
+                                            html`<span class="text">${this._getWeekDayText(day.date)}</span>` :
+                                            ''
+                                        }
+                                    `
+                                )
                             }
                         </div>
                         ${this._showWeather && day.weather ?
@@ -562,7 +582,7 @@ export class WeekPlannerCard extends LitElement {
                         data-start-minute="${event.start.toFormat('mm')}"
                         data-end-hour="${event.end.toFormat('H')}"
                         data-end-minute="${event.end.toFormat('mm')}"
-                        style="--border-color: ${event.colors[0]}"
+                        style="--border-color: ${event.colors[0]}; --event-bg-tint: ${event.colors[0]}; --dot-color: ${event.colors[0]}"
                         @click="${() => {
                             this._handleEventClick(event)
                         }}"
@@ -580,19 +600,21 @@ export class WeekPlannerCard extends LitElement {
                             `
                         })}
                         <div class="inner">
-                            ${this._showTime ?
-                                html`<div class="time">
-                                    ${this._renderEventTime(event)}
-                                </div>` :
-                                ''
-                            }
-                            ${this._showTitle ?
-                                    html`
-                                        <div class="title">
-                                            ${event.summary}
-                                        </div>
-                                    ` :
-                                    ''
+                            ${this._theme === 'skylight' ?
+                                html`
+                                    <div class="title">${event.summary}</div>
+                                    ${this._showTime ?
+                                        html`<div class="time">${this._renderEventTime(event)}</div>` :
+                                        ''
+                                    }
+                                ` :
+                                html`
+                                    ${this._showTime ?
+                                        html`<div class="time">${this._renderEventTime(event)}</div>` :
+                                        ''
+                                    }
+                                    <div class="title">${event.summary}</div>
+                                `
                             }
                             ${this._showDescription ?
                                 html`
@@ -618,6 +640,10 @@ export class WeekPlannerCard extends LitElement {
                                     <ha-icon icon="${event.icon}"></ha-icon>
                                 </div>
                             ` :
+                            ''
+                        }
+                        ${this._theme === 'skylight' ?
+                            html`<div class="calendar-dot"></div>` :
                             ''
                         }
                     </div>
